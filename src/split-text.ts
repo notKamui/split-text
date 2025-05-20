@@ -1,15 +1,23 @@
-interface SplitResult {
+export interface SplitResult {
   chars: HTMLSpanElement[]
   words: HTMLSpanElement[]
   lines: HTMLSpanElement[]
 }
 
-type ElementOrSelector = string | Element | Element[] | NodeListOf<Element>
+export type ElementOrSelector = string | Element | Element[] | NodeListOf<Element>
 
-function createSpan(type: 'char' | 'word' | 'line') {
+export interface SplitTextOptions {
+  classes?: {
+    char?: string
+    word?: string
+    line?: string
+  }
+}
+
+function createSpan(className: string) {
   const span = document.createElement('span')
   span.style.display = 'inline-block'
-  span.className = `split-${type}`
+  span.className = className
   span.setAttribute('aria-hidden', 'true')
   return span
 }
@@ -41,7 +49,10 @@ function getLineGroups(element: Element): Node[][] {
   return lineGroups
 }
 
-export function splitText(target: ElementOrSelector): SplitResult {
+export function splitText(target: ElementOrSelector, options: SplitTextOptions = {}): SplitResult {
+  const { classes = {} } = options
+  const { char: charClass = 'split-char', word: wordClass = 'split-word', line: lineClass = 'split-line' } = classes
+
   const element: Element | null =
     typeof target === 'string'
       ? document.querySelector<HTMLElement>(target)
@@ -72,10 +83,10 @@ export function splitText(target: ElementOrSelector): SplitResult {
     }
     if (token.length <= 0) continue
 
-    const wordSpan = createSpan('word')
+    const wordSpan = createSpan(wordClass)
 
     for (const char of token) {
-      const charSpan = createSpan('char')
+      const charSpan = createSpan(charClass)
       charSpan.textContent = char
       wordSpan.appendChild(charSpan)
       chars.push(charSpan)
@@ -93,7 +104,7 @@ export function splitText(target: ElementOrSelector): SplitResult {
 
   const wrapper = document.createDocumentFragment()
   for (const group of lineGroups) {
-    const lineSpan = createSpan('line')
+    const lineSpan = createSpan(lineClass)
     for (const node of group) {
       lineSpan.appendChild(node)
     }
